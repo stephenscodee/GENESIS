@@ -1,0 +1,72 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id          String   @id @default(uuid())
+  email       String   @unique
+  name        String?
+  role        UserRole @default(ORIGINATOR)
+  skills      String[]
+  reputation  Int      @default(0)
+  projects    Project[]
+  matches     Match[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+enum UserRole {
+  ORIGINATOR
+  BUILDER
+  GROWTH
+  CAPITAL
+}
+
+model Project {
+  id          String   @id @default(uuid())
+  problem     String
+  solution    String
+  workflow    String
+  stage       ProjectStage @default(IDEA)
+  needs       UserRole[]
+  owner       User     @relation(fields: [ownerId], references: [id])
+  ownerId     String
+  matches     Match[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+enum ProjectStage {
+  IDEA
+  MVP
+  VALIDATED
+}
+
+model Match {
+  id          String   @id @default(uuid())
+  project     Project  @relation(fields: [projectId], references: [id])
+  projectId   String
+  user        User     @relation(fields: [userId], references: [id])
+  userId      String
+  status      MatchStatus @default(PENDING)
+  feedback    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+enum MatchStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
